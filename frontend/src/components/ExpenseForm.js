@@ -11,7 +11,7 @@ const CATEGORIES = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Health', 
 
 const ExpenseForm = ({ onSubmit }) => {
   const [form, setForm] = useState({
-    title: '',
+    description: '',
     amount: '',
     category: 'Food',
     date: new Date().toISOString().split('T')[0], // today's date
@@ -30,7 +30,7 @@ const ExpenseForm = ({ onSubmit }) => {
     await onSubmit({ ...form, amount: Number(form.amount) });
     setLoading(false);
     // Reset form
-    setForm({ title: '', amount: '', category: 'Food', date: new Date().toISOString().split('T')[0], note: '' });
+    setForm({ description: '', amount: '', category: 'Food', date: new Date().toISOString().split('T')[0], note: '' });
   };
 
   return (
@@ -40,10 +40,10 @@ const ExpenseForm = ({ onSubmit }) => {
           <div className="field">
             <label>Title</label>
             <input
-              name="title"
+              name="description"
               type="text"
               placeholder="e.g. Lunch at CCD"
-              value={form.title}
+              value={form.description}
               onChange={handleChange}
               required
             />

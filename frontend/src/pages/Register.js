@@ -26,7 +26,7 @@ const Register = () => {
     try {
       const data = await registerUser(name, email, password);
 
-      if (data._id || data.message === 'User created') {
+      if (data.success) {
         // Registration success → go to login
         navigate('/login');
       } else {

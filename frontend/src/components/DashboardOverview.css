@@ -1,0 +1,49 @@
+.overview { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.overview-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.stat-value { font-size: 1.4rem; font-weight: 700; }
+.stat-value.income { color: #4ade80; }
+.stat-value.expense { color: #f87171; }
+.stat-value.savings { color: #60a5fa; }
+.stat-value.rate { color: #a78bfa; }
+
+.section-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem 1.5rem;
+}
+.section-box h3 { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; color: var(--text); }
+.empty-text { color: var(--muted); font-size: 0.875rem; text-align: center; padding: 1rem 0; }
+
+.category-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.category-row { display: grid; grid-template-columns: 100px 1fr 80px 45px; align-items: center; gap: 0.75rem; }
+.cat-name { font-size: 0.85rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cat-bar-wrap { background: var(--surface2); border-radius: 99px; height: 8px; overflow: hidden; }
+.cat-bar { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.5s ease; min-width: 4px; }
+.cat-amount { font-size: 0.8rem; color: var(--text); text-align: right; font-weight: 600; }
+.cat-percent { font-size: 0.75rem; color: var(--muted); text-align: right; }
+
+.txn-list { display: flex; flex-direction: column; gap: 0.75rem; }
+.txn-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid var(--border); }
+.txn-row:last-child { border-bottom: none; }
+.txn-left { display: flex; align-items: center; gap: 0.75rem; }
+.txn-type-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.txn-type-dot.income { background: #4ade80; }
+.txn-type-dot.expense { background: #f87171; }
+.txn-desc { font-size: 0.875rem; color: var(--text); margin: 0; font-weight: 500; }
+.txn-meta { font-size: 0.75rem; color: var(--muted); margin: 0; margin-top: 2px; }
+.txn-amount { font-size: 0.9rem; font-weight: 700; }
+.txn-amount.income { color: #4ade80; }
+.txn-amount.expense { color: #f87171; }

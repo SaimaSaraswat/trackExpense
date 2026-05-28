@@ -1,84 +1,109 @@
-// ─────────────────────────────────────────────
-//  Dashboard.js
-//
-//  Concepts used here:
-//  - useEffect: fetch expenses when page loads
-//  - useState: store expenses list + form state
-//  - Derived state: calculate totals from expenses array
-//  - Conditional rendering: show empty state vs list
-// ─────────────────────────────────────────────
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getExpenses, addExpense, deleteExpense } from '../utils/api';
+import { getExpenses, addExpense, deleteExpense, getIncomes, addIncome, deleteIncome, getDashboard } from '../utils/api';
 import ExpenseForm from '../components/ExpenseForm';
 import ExpenseList from '../components/ExpenseList';
-import StatsBar from '../components/StatsBar';
+import IncomeForm from '../components/IncomeForm';
+import IncomeList from '../components/IncomeList';
+import DashboardOverview from '../components/DashboardOverview';
 import './Dashboard.css';
+
+const TABS = ['Overview', 'Expenses', 'Income'];
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState('Overview');
   const [expenses, setExpenses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [filter, setFilter] = useState('All');
+  const [incomes, setIncomes] = useState([]);
+  const [dashData, setDashData] = useState(null);
+  const [loadingExp, setLoadingExp] = useState(true);
+  const [loadingInc, setLoadingInc] = useState(true);
+  const [loadingDash, setLoadingDash] = useState(true);
+  const [showExpForm, setShowExpForm] = useState(false);
+  const [showIncForm, setShowIncForm] = useState(false);
+  const [expFilter, setExpFilter] = useState('All');
+  const [incFilter, setIncFilter] = useState('All');
   const [error, setError] = useState('');
 
-  // Fetch all expenses when dashboard loads
-  useEffect(() => {
+  useEffect(() => { fetchAll(); }, []);
+
+  const fetchAll = () => {
     fetchExpenses();
-  }, []); // Empty array = run once on mount
+    fetchIncomes();
+    fetchDashboard();
+  };
 
   const fetchExpenses = async () => {
     try {
       const data = await getExpenses();
-      // data could be an array directly or { expenses: [...] }
       setExpenses(Array.isArray(data) ? data : data.expenses || []);
-    } catch (err) {
-      setError('Failed to load expenses.');
-    } finally {
-      setLoading(false);
-    }
+    } catch { setError('Failed to load expenses.'); }
+    finally { setLoadingExp(false); }
   };
 
-  const handleAdd = async (formData) => {
+  const fetchIncomes = async () => {
     try {
-      const newExpense = await addExpense(formData);
-      // Add to top of list without refetching
-      setExpenses((prev) => [newExpense, ...prev]);
-      setShowForm(false);
-    } catch (err) {
-      setError('Failed to add expense.');
-    }
+      const data = await getIncomes();
+      setIncomes(Array.isArray(data) ? data : data.incomes || []);
+    } catch { setError('Failed to load incomes.'); }
+    finally { setLoadingInc(false); }
   };
 
-  const handleDelete = async (id) => {
+  const fetchDashboard = async () => {
+    try {
+      const data = await getDashboard();
+      if (data.success) setDashData(data.data);
+    } catch { }
+    finally { setLoadingDash(false); }
+  };
+
+  const handleAddExpense = async (formData) => {
+    try {
+      const result = await addExpense(formData);
+      if (result.success) {
+        setError('');
+        await fetchExpenses();
+        await fetchDashboard();
+        setShowExpForm(false);
+      } else { setError(result.message || 'Failed to add expense.'); }
+    } catch { setError('Failed to add expense.'); }
+  };
+
+  const handleDeleteExpense = async (id) => {
     try {
       await deleteExpense(id);
-      // Remove from local state immediately
       setExpenses((prev) => prev.filter((e) => e._id !== id));
-    } catch (err) {
-      setError('Failed to delete expense.');
-    }
+      await fetchDashboard();
+    } catch { setError('Failed to delete expense.'); }
   };
 
-  // Derived: filter expenses by category
-  const categories = ['All', ...new Set(expenses.map((e) => e.category))];
-  const filtered = filter === 'All' ? expenses : expenses.filter((e) => e.category === filter);
+  const handleAddIncome = async (formData) => {
+    try {
+      const result = await addIncome(formData);
+      if (result.success) {
+        setError('');
+        await fetchIncomes();
+        await fetchDashboard();
+        setShowIncForm(false);
+      } else { setError(result.message || 'Failed to add income.'); }
+    } catch { setError('Failed to add income.'); }
+  };
 
-  // Derived: total amount
-  const total = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
-  const monthlyTotal = expenses
-    .filter((e) => {
-      const d = new Date(e.date || e.createdAt);
-      const now = new Date();
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    })
-    .reduce((sum, e) => sum + Number(e.amount), 0);
+  const handleDeleteIncome = async (id) => {
+    try {
+      await deleteIncome(id);
+      setIncomes((prev) => prev.filter((i) => i._id !== id));
+      await fetchDashboard();
+    } catch { setError('Failed to delete income.'); }
+  };
+
+  const expCategories = ['All', ...new Set(expenses.map((e) => e.category))];
+  const filteredExp = expFilter === 'All' ? expenses : expenses.filter((e) => e.category === expFilter);
+  const incCategories = ['All', ...new Set(incomes.map((i) => i.category))];
+  const filteredInc = incFilter === 'All' ? incomes : incomes.filter((i) => i.category === incFilter);
 
   return (
     <div className="dashboard">
-      {/* ── Navbar ── */}
       <nav className="navbar">
         <div className="nav-logo">₹ Tracker</div>
         <div className="nav-right">
@@ -87,44 +112,67 @@ const Dashboard = () => {
         </div>
       </nav>
 
-      <main className="main-content fade-in">
-        {/* ── Stats ── */}
-        <StatsBar total={total} monthlyTotal={monthlyTotal} count={expenses.length} />
-
-        {/* ── Header row ── */}
-        <div className="section-header">
-          <h2>Expenses</h2>
-          <button className="btn-add" onClick={() => setShowForm((v) => !v)}>
-            {showForm ? '✕ Cancel' : '+ Add Expense'}
+      <div className="tab-bar">
+        {TABS.map((tab) => (
+          <button key={tab} className={`tab-btn ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
+            {tab}
           </button>
-        </div>
+        ))}
+      </div>
 
-        {/* ── Add Expense Form ── */}
-        {showForm && <ExpenseForm onSubmit={handleAdd} />}
-
-        {/* ── Error ── */}
+      <main className="main-content fade-in">
         {error && <div className="dash-error">{error}</div>}
 
-        {/* ── Category Filter ── */}
-        {categories.length > 1 && (
-          <div className="filter-bar">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                className={`filter-btn ${filter === cat ? 'active' : ''}`}
-                onClick={() => setFilter(cat)}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+        {activeTab === 'Overview' && (
+          <DashboardOverview data={dashData} loading={loadingDash} />
         )}
 
-        {/* ── Expense List ── */}
-        {loading ? (
-          <div className="loading-state">Loading your expenses...</div>
-        ) : (
-          <ExpenseList expenses={filtered} onDelete={handleDelete} />
+        {activeTab === 'Expenses' && (
+          <>
+            <div className="section-header">
+              <h2>Expenses</h2>
+              <button className="btn-add" onClick={() => setShowExpForm((v) => !v)}>
+                {showExpForm ? '✕ Cancel' : '+ Add Expense'}
+              </button>
+            </div>
+            {showExpForm && <ExpenseForm onSubmit={handleAddExpense} />}
+            {expCategories.length > 1 && (
+              <div className="filter-bar">
+                {expCategories.map((cat) => (
+                  <button key={cat} className={`filter-btn ${expFilter === cat ? 'active' : ''}`} onClick={() => setExpFilter(cat)}>
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
+            {loadingExp ? <div className="loading-state">Loading expenses...</div> : (
+              <ExpenseList expenses={filteredExp} onDelete={handleDeleteExpense} />
+            )}
+          </>
+        )}
+
+        {activeTab === 'Income' && (
+          <>
+            <div className="section-header">
+              <h2>Income</h2>
+              <button className="btn-add income" onClick={() => setShowIncForm((v) => !v)}>
+                {showIncForm ? '✕ Cancel' : '+ Add Income'}
+              </button>
+            </div>
+            {showIncForm && <IncomeForm onSubmit={handleAddIncome} />}
+            {incCategories.length > 1 && (
+              <div className="filter-bar">
+                {incCategories.map((cat) => (
+                  <button key={cat} className={`filter-btn ${incFilter === cat ? 'active' : ''}`} onClick={() => setIncFilter(cat)}>
+                    {cat}
+                  </button>
+                ))}
+              </div>
+            )}
+            {loadingInc ? <div className="loading-state">Loading income...</div> : (
+              <IncomeList incomes={filteredInc} onDelete={handleDeleteIncome} />
+            )}
+          </>
         )}
       </main>
     </div>
