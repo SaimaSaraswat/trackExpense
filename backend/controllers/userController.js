@@ -138,3 +138,4 @@ export async function registerUser(req,res){
         res.status(500).json({success:false,message:"Server error"});
       }
     }
+    // testing

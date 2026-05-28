@@ -28,3 +28,4 @@ const StatsBar = ({ total, monthlyTotal, count }) => (
 );
 
 export default StatsBar;
+//done

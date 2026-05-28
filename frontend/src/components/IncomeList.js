@@ -35,3 +35,4 @@ const IncomeList = ({ incomes, onDelete }) => {
 };
 
 export default IncomeList;
+//done
